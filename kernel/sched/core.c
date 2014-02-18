@@ -5,8 +5,8 @@
  *
  *  Copyright (C) 1991-2002  Linus Torvalds
  *
- * Copyright (c) 2014, NVIDIA CORPORATION. All rights reserved.
- * 
+ *  Copyright (c) 2014, NVIDIA CORPORATION.  All rights reserved.
+ *
  *  1996-12-23  Modified by Dave Grothe to fix bugs in semaphores and
  *		make semaphores SMP safe
  *  1998-11-19	Implemented schedule_timeout() and related stuff
@@ -1140,7 +1140,7 @@ unsigned long wait_task_inactive(struct task_struct *p, long match_state)
 		 */
 		while (task_running(rq, p)) {
 			if (match_state && unlikely(cpu_relaxed_read_long
-			    (&(p->state)) != match_state))
+				(&(p->state)) != match_state))
 				return 0;
 			cpu_read_relax();
 		}
@@ -1642,6 +1642,7 @@ out:
  */
 int wake_up_process(struct task_struct *p)
 {
+	WARN_ON(task_is_stopped_or_traced(p));
 	return try_to_wake_up(p, TASK_NORMAL, 0);
 }
 EXPORT_SYMBOL(wake_up_process);
