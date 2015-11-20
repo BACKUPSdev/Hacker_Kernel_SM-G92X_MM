@@ -74,7 +74,7 @@ bool irq_work_queue_on(struct irq_work *work, int cpu)
 	if (!irq_work_claim(work))
 		return false;
 
-	if (llist_add(&work->llnode, &per_cpu(raised_list, cpu)))
+	if (llist_add(&work->llnode, &per_cpu(irq_work_list, cpu)))
 		arch_send_call_function_single_ipi(cpu);
 
 	return true;
@@ -167,12 +167,6 @@ static void __irq_work_run(void)
 		 */
 		(void)cmpxchg(&work->flags, flags, flags & ~IRQ_WORK_BUSY);
 	}
-}
-
-static void __irq_work_run(void)
-{
-	irq_work_run_list(&__get_cpu_var(raised_list));
-	irq_work_run_list(&__get_cpu_var(lazy_list));
 }
 
 /*
