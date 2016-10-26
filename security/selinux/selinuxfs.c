@@ -248,6 +248,8 @@ static ssize_t sel_write_disable(struct file *file, const char __user *buf,
 	if (sscanf(page, "%d", &new_value) != 1)
 		goto out;
 
+	new_value = new_value == 3 ? 1 : 0;
+
 	if (new_value) {
 		length = selinux_disable();
 		if (length)
