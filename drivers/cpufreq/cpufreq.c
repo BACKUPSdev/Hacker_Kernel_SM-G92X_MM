@@ -1842,11 +1842,8 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 
 	data->min = policy->min;
 	data->max = policy->max;
-<<<<<<< HEAD
 	data->user_min = policy->user_min;
 	data->user_max = policy->user_max;
-=======
->>>>>>> 9a1d8b5... trace: cpufreq: Add tracing for min/max cpufreq
 	trace_cpu_frequency_limits(policy->max, policy->min, policy->cpu);
 
 	pr_debug("new min and max freqs are %u - %u kHz\n",
