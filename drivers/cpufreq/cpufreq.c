@@ -109,7 +109,6 @@ static void handle_update(struct work_struct *work);
  */
 static BLOCKING_NOTIFIER_HEAD(cpufreq_policy_notifier_list);
 static struct srcu_notifier_head cpufreq_transition_notifier_list;
-struct atomic_notifier_head cpufreq_govinfo_notifier_list;
 
 static bool init_cpufreq_transition_notifier_list_called;
 static int __init init_cpufreq_transition_notifier_list(void)
@@ -119,15 +118,6 @@ static int __init init_cpufreq_transition_notifier_list(void)
 	return 0;
 }
 pure_initcall(init_cpufreq_transition_notifier_list);
-
-static bool init_cpufreq_govinfo_notifier_list_called;
-static int __init init_cpufreq_govinfo_notifier_list(void)
-{
-	ATOMIC_INIT_NOTIFIER_HEAD(&cpufreq_govinfo_notifier_list);
-	init_cpufreq_govinfo_notifier_list_called = true;
-	return 0;
-}
-pure_initcall(init_cpufreq_govinfo_notifier_list);
 
 static int off __read_mostly;
 static int cpufreq_disabled(void)
@@ -458,54 +448,8 @@ static ssize_t store_##file_name					\
 
 store_one(policy_min_freq, min);
 store_one(policy_max_freq, max);
-//store_one(scaling_min_freq, user_min);
-static ssize_t store_scaling_min_freq(struct cpufreq_policy *policy,
-					const char *buf, size_t count)
-{
-	unsigned int ret;
-	struct cpufreq_policy new_policy;
-
-	ret = cpufreq_get_policy(&new_policy, policy->cpu);
-	if (ret)
-		return -EINVAL;
-
-	ret = sscanf(buf, "%u", &new_policy.user_min);
-	if (ret != 1)
-		return -EINVAL;
-	ret = sscanf(buf, "%u", &new_policy.min);
-	if (ret != 1)
-		return -EINVAL;
-
-	ret = __cpufreq_set_policy(policy, &new_policy);
-	policy->user_policy.user_min = policy->user_min;
-	policy->user_policy.min = policy->min;
-
-	return ret ? ret : count;
-}
-//store_one(scaling_max_freq, user_max);
-static ssize_t store_scaling_max_freq(struct cpufreq_policy *policy,
-					const char *buf, size_t count)
-{
-	unsigned int ret;
-	struct cpufreq_policy new_policy;
-
-	ret = cpufreq_get_policy(&new_policy, policy->cpu);
-	if (ret)
-		return -EINVAL;
-
-	ret = sscanf(buf, "%u", &new_policy.user_max);
-	if (ret != 1)
-		return -EINVAL;
-	ret = sscanf(buf, "%u", &new_policy.max);
-	if (ret != 1)
-		return -EINVAL;
-
-	ret = __cpufreq_set_policy(policy, &new_policy);
-	policy->user_policy.user_max = policy->user_max;
-	policy->user_policy.max = policy->max;
-
-	return ret ? ret : count;
-}
+store_one(scaling_min_freq, user_min);
+store_one(scaling_max_freq, user_max);
 
 /**
  * show_cpuinfo_cur_freq - current CPU frequency as detected by hardware
@@ -1015,16 +959,12 @@ static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 	 * managing offline cpus here.
 	 */
 	cpumask_and(policy->cpus, policy->cpus, cpu_online_mask);
-
-	if (last_min > -1) {
+	
+	if (last_min > -1)
 		policy->min = last_min;
-		policy->user_min = last_min;
-	}
-
-	if (last_max > -1) {
+	
+	if (last_max > -1)
 		policy->max = last_max;
-		policy->user_max = last_max;
-	}
 
 	policy->user_policy.min = policy->min;
 	policy->user_policy.max = policy->max;
@@ -1487,8 +1427,7 @@ int cpufreq_register_notifier(struct notifier_block *nb, unsigned int list)
 	if (cpufreq_disabled())
 		return -EINVAL;
 
-	WARN_ON(!init_cpufreq_transition_notifier_list_called ||
-		!init_cpufreq_govinfo_notifier_list_called);
+	WARN_ON(!init_cpufreq_transition_notifier_list_called);
 
 	switch (list) {
 	case CPUFREQ_TRANSITION_NOTIFIER:
@@ -1498,10 +1437,6 @@ int cpufreq_register_notifier(struct notifier_block *nb, unsigned int list)
 	case CPUFREQ_POLICY_NOTIFIER:
 		ret = blocking_notifier_chain_register(
 				&cpufreq_policy_notifier_list, nb);
-		break;
-	case CPUFREQ_GOVINFO_NOTIFIER:
-		ret = atomic_notifier_chain_register(
-				&cpufreq_govinfo_notifier_list, nb);
 		break;
 	default:
 		ret = -EINVAL;
@@ -1537,10 +1472,6 @@ int cpufreq_unregister_notifier(struct notifier_block *nb, unsigned int list)
 	case CPUFREQ_POLICY_NOTIFIER:
 		ret = blocking_notifier_chain_unregister(
 				&cpufreq_policy_notifier_list, nb);
-		break;
-	case CPUFREQ_GOVINFO_NOTIFIER:
-		ret = atomic_notifier_chain_unregister(
-				&cpufreq_govinfo_notifier_list, nb);
 		break;
 	default:
 		ret = -EINVAL;
@@ -1842,9 +1773,6 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 
 	data->min = policy->min;
 	data->max = policy->max;
-	data->user_min = policy->user_min;
-	data->user_max = policy->user_max;
-	trace_cpu_frequency_limits(policy->max, policy->min, policy->cpu);
 
 	pr_debug("new min and max freqs are %u - %u kHz\n",
 					data->min, data->max);
