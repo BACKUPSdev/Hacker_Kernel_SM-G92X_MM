@@ -16,7 +16,6 @@
  */
 
 #include <mali_kbase.h>
-#include <mach/apm-exynos.h>
 #if defined (CONFIG_SOC_EXYNOS8890)
 #include <linux/apm-exynos.h>
 #ifdef CONFIG_EXYNOS8890_BTS_OPTIMIZATION
@@ -36,7 +35,6 @@
 #endif
 
 #include <linux/apm-exynos.h>
-#include <linux/soc/samsung/asv-exynos.h>
 
 #include "mali_kbase_platform.h"
 #include "gpu_control.h"

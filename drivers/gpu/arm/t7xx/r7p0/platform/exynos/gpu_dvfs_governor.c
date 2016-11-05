@@ -17,7 +17,6 @@
 
 #include <mali_kbase.h>
 
-#include <mach/asv-exynos.h>
 #ifdef CONFIG_MALI_DVFS
 #ifdef CONFIG_PWRCAL
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)

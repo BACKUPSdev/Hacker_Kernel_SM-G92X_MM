@@ -159,21 +159,6 @@ void gpu_destroy_context(void *ctx)
 #endif
 }
 
-/* MALI_SEC_INTEGRATION */
-/**
- * enum mali_error - Mali error codes shared with userspace
- *
- * This is subset of those common Mali errors that can be returned to userspace.
- * Values of matching user and kernel space enumerators MUST be the same.
- * MALI_ERROR_NONE is guaranteed to be 0.
- */
-enum mali_error {
-	MALI_ERROR_NONE = 0,
-	MALI_ERROR_OUT_OF_GPU_MEMORY,
-	MALI_ERROR_OUT_OF_MEMORY,
-	MALI_ERROR_FUNCTION_FAILED,
-};
-
 int gpu_vendor_dispatch(struct kbase_context *kctx, void * const args, u32 args_size)
 {
 	struct kbase_device *kbdev;
@@ -744,7 +729,7 @@ static void kbase_fence_timeout(unsigned long data)
 		return;
 	}
 
-	if (katom->fence->status != 0) {
+	if (atomic_read(&(katom->fence->status)) != 0) {
 		spin_unlock_irqrestore(&katom->fence_lock, flags);
 		kbase_fence_del_timer(katom);
 		return;

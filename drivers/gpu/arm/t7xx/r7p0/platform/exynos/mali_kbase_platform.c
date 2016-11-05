@@ -32,8 +32,6 @@
 #include <linux/exynos_ion.h>
 extern struct ion_device *ion_exynos;
 #endif
-#define PROT_G3D		0xC
-#define SMC_TZPC_OK		0x2
 #endif
 
 struct kbase_device *pkbdev;
