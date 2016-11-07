@@ -56,7 +56,6 @@ struct cpu_load_info {
 static DEFINE_PER_CPU(struct cpu_load_info, cur_cpu_info);
 static DEFINE_MUTEX(dm_hotplug_lock);
 static DEFINE_MUTEX(thread_lock);
-<<<<<<< HEAD
 static DEFINE_MUTEX(cluster1_hotplug_lock);
 static DEFINE_MUTEX(cluster0_hotplug_in_lock);
 #ifdef CONFIG_HOTPLUG_THREAD_STOP
